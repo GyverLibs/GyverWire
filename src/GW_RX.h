@@ -2,6 +2,7 @@
 #include <./utils.h>
 #include <Arduino.h>
 #include <GyverIO.h>
+#include <Hamming.h>
 
 #define _GW_TOLERANCE 2
 #define _GW_FILT_DIV 5
@@ -12,6 +13,12 @@ template <uint8_t pin, int32_t baud = 5000, size_t bufsize = 64>
 class GW_RX {
     typedef void (*PacketCallback)(uint8_t type, void* data, size_t len);
     typedef void (*RawCallback)(void* data, size_t len);
+
+#if defined(GW_USE_HAMMING) || defined(GW_USE_HAMMING_MIX)
+    static constexpr size_t GW_BUFSIZE = (bufsize + 3) * 2;
+#else
+    static constexpr size_t GW_BUFSIZE = bufsize + 3;
+#endif
 
     enum class State : uint8_t {
         Idle,
@@ -103,7 +110,7 @@ class GW_RX {
 
         _pinv ^= 1;
         if (!_edge) {
-            if (_len >= bufsize) {
+            if (_len >= GW_BUFSIZE) {
                 _state = State::Idle;
                 return;
             }
@@ -119,6 +126,21 @@ class GW_RX {
     // вызывать в loop
     void tick() {
         if (_state == State::Done) {
+#if defined(GW_USE_HAMMING)
+            if (!Hamming3::decode(_buf, _len)) {
+                _state = State::Idle;
+                return;
+            }
+            _len = Hamming3::decodedSize(_len);
+#elif defined(GW_USE_HAMMING_MIX)
+            if (!Hamming3::unmix8(_buf, _len)) {
+                _state = State::Idle;
+                return;
+            }
+            Hamming3::decode(_buf, _len);
+            _len = Hamming3::decodedSize(_len);
+#endif
+
             if (_raw_cb) _raw_cb(_buf, _len);
             // if (_pack_cb && _len > 2 && !gwutil::crc8(_buf, _len)) {
             //     _pack_cb(_buf[_len - 2], _buf, _len - 2);
@@ -155,7 +177,7 @@ class GW_RX {
 #else
     uint16_t _prevUs = 0;
 #endif
-    uint8_t _buf[bufsize + 3];
+    uint8_t _buf[GW_BUFSIZE];
     PacketCallback _pack_cb = nullptr;
     RawCallback _raw_cb = nullptr;
     uint16_t _len = 0;

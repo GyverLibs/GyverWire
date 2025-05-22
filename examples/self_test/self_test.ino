@@ -1,6 +1,9 @@
 // само-тест. Пины 2 и 3 соединены проводом (3 отправляет, 2 принимает)
 
 #include <Arduino.h>
+// #define GW_USE_HAMMING
+// #define GW_USE_HAMMING_MIX
+
 #include <GW_RX.h>
 #include <GW_TX.h>
 

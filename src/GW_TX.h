@@ -3,17 +3,24 @@
 #include <Arduino.h>
 #include <GyverIO.h>
 
+// #ifdef GW_USE_HAMMING
+#include <Hamming.h>
+// #endif
+
 #define GW_MAX_LEN ((1 << (16 - _GW_TYPE_SIZE)) - 1)
 #define GW_MAX_TYPE ((1 << _GW_TYPE_SIZE) - 1)
 #define GW_AUTO_TYPE GW_MAX_TYPE
 
-#define _GW_RF_MIN_TRAIN 5
-#define _GW_RF_DESYNC 50
+#define _GW_RF_MIN_TRAIN 5  // мин. кол-во импульсов для раскачки радио
+#define _GW_RF_DESYNC 50    // минимальный период отправки по радио, мс
 #define _GW_MODUL_FREQ(freq) uint16_t(1000000ul / freq / 2)
 
 // GW_TX
 template <uint8_t pin, int32_t baud = 5000>
 class GW_TX {
+   protected:
+    static constexpr size_t GW_FRAME = _GW_FRAME(baud);
+
    public:
     GW_TX() {
         pinMode(pin, OUTPUT);
@@ -22,13 +29,13 @@ class GW_TX {
 
     // ======== PACKET ========
 
-    // отправить пакет авто (тип GW_AUTO_TYPE, 255)
+    // отправить пакет авто (тип GW_AUTO_TYPE)
     template <typename Td>
     void sendPacket(const Td& data) {
         _sendPacket(GW_AUTO_TYPE, &data, sizeof(Td));
     }
 
-    // отправить пакет авто (тип GW_AUTO_TYPE, 255)
+    // отправить пакет авто (тип GW_AUTO_TYPE)
     void sendPacket(const void* data, size_t len) {
         _sendPacket(GW_AUTO_TYPE, data, len);
     }
@@ -58,45 +65,61 @@ class GW_TX {
         sendRaw(&data, sizeof(T));
     }
 
-    // отправить сырые данные
-    void sendRaw(const void* data, size_t len) {
-        const uint8_t* p = (const uint8_t*)data;
-        if (_first) {
-            _first = false;
-            if (p[0] & _BV(7)) {
-                _writeUs(1, _GW_FRAME(baud));
-                _writeUs(0, _GW_FRAME(baud));
-                _writeUs(1, _GW_FRAME(baud) * 3);
-            } else {
-                _writeUs(1, _GW_FRAME(baud));
-                _writeUs(0, _GW_FRAME(baud) * 3);
-            }
-        }
-        while (len--) sendByte(*p++);
+    // отправить одиночные сырые данные (не нужно вызывать begin + end)
+    template <typename T>
+    void sendRawSingle(const T& data) {
+        sendRawSingle(&data, sizeof(T));
     }
 
-    // отправить raw байт
-    void sendByte(uint8_t b) {
-        uint8_t b8 = 8;
-        while (b8--) {
-            _last = b & _BV(7);
-            _writeUs(!_last, _GW_FRAME(baud));
-            _writeUs(_last, _GW_FRAME(baud));
-            b <<= 1;
+    // отправить одиночные сырые данные (не нужно вызывать begin + end)
+    void sendRawSingle(const void* data, size_t len) {
+        beginRaw();
+        sendRaw(data, len);
+        endRaw();
+    }
+
+    // отправить сырые данные
+    void sendRaw(const void* data, size_t len) {
+#if defined(GW_USE_HAMMING)
+        const uint8_t* p = (const uint8_t*)data;
+        if (_first) _startFrame(Hamming3::encode(*p & 0xf));
+
+        while (len--) {
+            _sendByte(Hamming3::encode(*p & 0xf));
+            _sendByte(Hamming3::encode(*p >> 4));
+            ++p;
         }
+
+#elif defined(GW_USE_HAMMING_MIX)
+        size_t elen = Hamming3::encodedSize(len);
+        uint8_t* buf = new uint8_t[elen];
+        if (!buf) return;
+
+        Hamming3::encode(buf, data, len);
+        Hamming3::mix8(buf, elen);
+
+        uint8_t* p = buf;
+        _startFrame(*p);
+        while (elen--) _sendByte(*p++);
+        delete[] buf;
+#else
+        const uint8_t* p = (const uint8_t*)data;
+        _startFrame(*p);
+        while (len--) _sendByte(*p++);
+#endif
     }
 
     // закончить отправку сырых данных
     void endRaw() {
         if (_last) {
-            _writeUs(0, _GW_FRAME(baud) * 2);
-            _writeUs(1, _GW_FRAME(baud));
+            _writeUs(0, GW_FRAME * 2);
+            _writeUs(1, GW_FRAME);
         } else {
-            _writeUs(1, _GW_FRAME(baud) * 2);
-            _writeUs(0, _GW_FRAME(baud));
-            _writeUs(1, _GW_FRAME(baud));
+            _writeUs(1, GW_FRAME * 2);
+            _writeUs(0, GW_FRAME);
+            _writeUs(1, GW_FRAME);
         }
-        _writeUs(0, _GW_FRAME(baud));
+        _writeUs(0, GW_FRAME);
         _lastSend = millis();
     }
 
@@ -126,11 +149,31 @@ class GW_TX {
         uint8_t crc = gwutil::crc8(data, len);
         crc = gwutil::crc8(lentype, 2, crc);
 
+#ifdef GW_USE_HAMMING_MIX
+        size_t elen = Hamming3::encodedSize(len + 3);
+        uint8_t* buf = new uint8_t[elen];
+        if (!buf) return;
+
+        uint8_t* p = buf;
+        Hamming3::encode(p, data, len), p += Hamming3::encodedSize(len);
+        Hamming3::encode(p, lentype, 2), p += Hamming3::encodedSize(2);
+        Hamming3::encode(p, &crc, 1);
+
+        Hamming3::mix8(buf, elen);
+
+        p = buf;
+        beginRaw();
+        _startFrame(*p);
+        while (elen--) _sendByte(*p++);
+        endRaw();
+        delete[] buf;
+#else
         beginRaw();
         sendRaw(data, len);
         sendRaw(lentype, 2);
-        sendByte(crc);
+        sendRaw(&crc, 1);
         endRaw();
+#endif
     }
 
     virtual void _writeUs(bool v, uint16_t us) {
@@ -140,12 +183,37 @@ class GW_TX {
 
    private:
     bool _first = true;
-    bool _last;
+    bool _last = false;
+
+    void _sendByte(uint8_t b) {
+        uint8_t b8 = 8;
+        while (b8--) {
+            _last = b & _BV(7);
+            _writeUs(!_last, GW_FRAME);
+            _writeUs(_last, GW_FRAME);
+            b <<= 1;
+        }
+    }
+    void _startFrame(uint8_t b) {
+        if (_first) {
+            _first = false;
+            if (b & _BV(7)) {
+                _writeUs(1, GW_FRAME);
+                _writeUs(0, GW_FRAME);
+                _writeUs(1, GW_FRAME * 3);
+            } else {
+                _writeUs(1, GW_FRAME);
+                _writeUs(0, GW_FRAME * 3);
+            }
+        }
+    }
 };
 
 // GW_TX_RF
 template <uint8_t pin, int32_t baud = 5000>
 class GW_TX_RF : public GW_TX<pin, baud> {
+    typedef GW_TX<pin, baud> GW;
+
    public:
     GW_TX_RF(uint8_t trainMs = 30) {
         setTrain(trainMs);
@@ -158,20 +226,21 @@ class GW_TX_RF : public GW_TX<pin, baud> {
 
     // начать отправку сырых данных
     void beginRaw() override {
-        _train(GW_TX<pin, baud>::lastSend() >= _GW_RF_DESYNC ? _trainMs : 0);
-        GW_TX<pin, baud>::beginRaw();
+        _train(GW::lastSend() >= _GW_RF_DESYNC ? _trainMs : 0);
+        GW::beginRaw();
     }
 
    private:
     uint8_t _trainMs;
 
-    using GW_TX<pin, baud>::_writeUs;
+    using GW::_writeUs;
+    using GW::GW_FRAME;
 
     void _train(uint8_t ms) {
-        uint16_t n = ms ? (1000ul * ms / (_GW_FRAME(baud) * 4)) : _GW_RF_MIN_TRAIN;
+        uint16_t n = ms ? (1000ul * ms / (GW_FRAME * 4)) : _GW_RF_MIN_TRAIN;
         while (n--) {
-            _writeUs(1, _GW_FRAME(baud) * 2);
-            _writeUs(0, _GW_FRAME(baud) * 2);
+            _writeUs(1, GW_FRAME * 2);
+            _writeUs(0, GW_FRAME * 2);
         }
     }
 };
