@@ -13,7 +13,6 @@
 
 #define _GW_RF_MIN_TRAIN 5  // мин. кол-во импульсов для раскачки радио
 #define _GW_RF_DESYNC 50    // минимальный период отправки по радио, мс
-#define _GW_MODUL_FREQ(freq) uint16_t(1000000ul / freq / 2)
 
 // GW_TX
 template <uint8_t pin, int32_t baud = 5000>
@@ -249,16 +248,22 @@ class GW_TX_RF : public GW_TX<pin, baud> {
 template <uint8_t pin, int32_t baud = 5000, uint32_t freq = 38000>
 class GW_TX_IR : public GW_TX<pin, baud> {
    private:
+    static constexpr uint16_t GW_DEL38 = 1000000ul / freq / 2;
+
     void _writeUs(bool v, uint16_t us) override {
         v ? delayMicroseconds(us) : _pulse38kHz(us);
     }
 
     void _pulse38kHz(uint16_t dur) {
-        dur = (dur / _GW_MODUL_FREQ(freq)) & ~1;  // до чётного
         bool f = 0;
-        while (dur--) {
+        while (dur > GW_DEL38) {
             gio::write(pin, f ^= 1);
-            delayMicroseconds(_GW_MODUL_FREQ(freq));
+            delayMicroseconds(GW_DEL38);
+            dur -= GW_DEL38;
+        }
+        if (f) {
+            gio::write(pin, 0);
+            delayMicroseconds(GW_DEL38);
         }
     }
 };
