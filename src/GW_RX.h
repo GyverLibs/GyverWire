@@ -133,11 +133,10 @@ class GW_RX {
             }
             _len = Hamming3::decodedSize(_len);
 #elif defined(GW_USE_HAMMING_MIX)
-            if (!Hamming3::unmix8(_buf, _len)) {
+            if (!Hamming3::unmix8(_buf, _len) || !Hamming3::decode(_buf, _len)) {
                 _state = State::Idle;
                 return;
             }
-            Hamming3::decode(_buf, _len);
             _len = Hamming3::decodedSize(_len);
 #endif
 
