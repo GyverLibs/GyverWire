@@ -161,14 +161,7 @@ class GW_RX {
 
     // получить качество приёма в процентах
     uint8_t getRSSI() {
-        uint16_t mask = _rssi;
-        uint8_t count = 0;
-        uint8_t i = 16;
-        while (i--) {
-            if (mask & 1) ++count;
-            mask >>= 1;
-        }
-        return count * 100 / 16;
+        return ((countBits(_rssi) + countBits(_rssi >> 8)) * 100) >> 4;
     }
 
    private:
@@ -186,4 +179,10 @@ class GW_RX {
     State _state = State::Idle;
     bool _edge;
     bool _pinv;
+
+    static uint8_t countBits(uint8_t x) {
+        x -= (x >> 1) & 0x55;
+        x = (x & 0x33) + ((x >> 2) & 0x33);
+        return (x + (x >> 4)) & 0x0F;
+    }
 };
