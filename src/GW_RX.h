@@ -68,6 +68,22 @@ class GW_RX {
         _raw_cb = cb;
     }
 
+    // прочитать в (вызывать в обработчике)
+    template <typename T>
+    bool readTo(T& var) {
+        if (_state != State::Done || sizeof(var) != _len) return false;
+        memcpy(&var, _buf, _len);
+        return true;
+    }
+
+    // прочитать как (вызывать в обработчике)
+    template <typename T>
+    T readAs() {
+        T var;
+        readTo(var);
+        return var;
+    }
+
     // вызывать при изменении сигнала на пине
     void pinChange() {
 #ifndef GW_NO_FILTER
@@ -150,7 +166,9 @@ class GW_RX {
                     uint16_t len = ((_buf[_len - 3] << 8) | _buf[_len - 2]) >> _GW_TYPE_SIZE;
                     if (len == _len - 3) {
                         _rssi |= 1;
-                        _pack_cb(_buf[_len - 2] & _GW_TYPE_MASK, _buf, len);
+                        uint8_t type = _buf[_len - 2] & _GW_TYPE_MASK;
+                        _len -= 3;
+                        _pack_cb(type, _buf, _len);
                     }
                 }
             }

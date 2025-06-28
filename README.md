@@ -112,6 +112,14 @@ void tick();
 
 // получить качество приёма в процентах
 uint8_t getRSSI();
+
+// прочитать в (вызывать в обработчике)
+template <typename T>
+bool readTo(T& var);
+
+// прочитать как (вызывать в обработчике)
+template <typename T>
+T readAs();
 ```
 
 ### Отправка
