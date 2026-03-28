@@ -24,7 +24,7 @@ struct Data {
 
 void setup() {
     Serial.begin(115200);
-    attachInterrupt(0, []() { rx.pinChange(); }, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(2), []() { rx.pinChange(); }, CHANGE);
 
     rx.onPacket([](uint8_t type, void* data, size_t len) {
         Serial.print("received type ");
