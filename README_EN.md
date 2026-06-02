@@ -1,499 +1,521 @@
-This is an automatic translation, may be incorrect in some places. See sources and examples!
+This is an automatic translation and may be incorrect in some places. See the source README and examples for authoritative information.
 
-# Gyverwire
-Easy Library for transmitting data of any type and size on the program interface Gyverwire (GW)
-- reliable DC-Balanced Balance Communication Interface based on Manchester Encoding with additional frames
-- reception completely in interruption without polling millisa in LOOP
-- Self -Synchronization, noise filtering
-- Sending and receiving completely their "raw" data
-- Ready -made tool for creating communication protocols: sending any data indicating the type, the library checks the integrity of the package using CRC Dallas
-- Optionally Extnded Hamming84 Coding with mixing to restore damaged during data transfer
-- from the box, a transmission by wire, radio 433 MHz and IR channel
-- calculation of the quality of communication at the receiver
+[![latest](https://img.shields.io/github/v/release/GyverLibs/GyverWire.svg?color=brightgreen)](https://github.com/GyverLibs/GyverWire/releases/latest/download/GyverWire.zip)
+[![PIO](https://badges.registry.platformio.org/packages/gyverlibs/library/GyverWire.svg)](https://registry.platformio.org/libraries/gyverlibs/GyverWire)
+[![Foo](https://img.shields.io/badge/Website-AlexGyver.ru-blue.svg?style=flat-square)](https://alexgyver.ru/)
+[![Foo](https://img.shields.io/badge/%E2%82%BD%24%E2%82%AC%20%D0%9F%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%B0%D1%82%D1%8C-%D0%B0%D0%B2%D1%82%D0%BE%D1%80%D0%B0-orange.svg?style=flat-square)](https://alexgyver.ru/support_alex/)
+[![Foo](https://img.shields.io/badge/README-ENGLISH-blueviolet.svg?style=flat-square)](https://github-com.translate.goog/GyverLibs/GyverWire?_x_tr_sl=ru&_x_tr_tl=en)  
 
-> The library is easier, more convenient and reliable than the Gyver433 and Gyvertransfer libraries and is designed to replace them
+[![Foo](https://img.shields.io/badge/ПОДПИСАТЬСЯ-НА%20ОБНОВЛЕНИЯ-brightgreen.svg?style=social&logo=telegram&color=blue)](https://t.me/GyverLibs)
 
-## compatibility
-Compatible with all arduino platforms (used arduino functions)
+# GyverWire
+Lightweight library for transferring data of any type and size over the GyverWire (GW) software interface
+- Reliable DC-balanced Manchester Encoding-based packet communication interface with additional frames
+- Reception completely in interruption without polling millis in loop
+- Self-synchronization, noise filtering
+- Sending and receiving your raw data
+- Ready-made tool for creating communication protocols: send any type-specific data, library checks packet integrity with CRC Dallas
+- Optional Extended Hamming84 stirred encoding to repair damaged data
+- Out of the box implemented transmission by wire, radio 433 MHz and IR channel
+- Calculation of communication quality on the receiver
+
+> The library is lighter, more convenient and more reliable than the Gyver433 and GyverTransfer libraries and is designed to replace them.
+
+### Compatibility
+Compatible with all Arduino platforms (Arduino features are used)
 
 ### Dependencies
-- Gyverio
+- GyverIO
 - Hamming
 
-## Content
-- [use] (#usage)
-- [versions] (#varsions)
-- [installation] (# Install)
-- [bugs and feedback] (#fedback)
+## Contents
+- [Use of use](#usage)
+- [Versions](#versions)
+- [Installation](#install)
+- [Bugs and feedback](#feedback)
 
-<a id = "USAGE"> </A>
+<a id="usage"></a>
 
-## Usage
-The library contains 3 classes of transmitters and 1 General class of the receiver:
+## Use of use
+The library contains 3 classes of transmitters and 1 general class of receiver:
 
-### transmitters
-- `gw_tx <pin, baud = 5000>` - for transmission by wire (clean signal without modifications)
-- `gw_tx_rf <pin, baud = 5000>` `Radio Moduli 433 MHz and the similar ones (the mechanism of" training "of the communication channel)
-- `gw_tx_ir <pin, baud = 5000, freq = 38000>` ik channel (modulation 38 kHz with inversion)
-- `pin` - PIN MK
-- `baud` - speed (bit/s, body)
-- `freq` - modulation frequency for IR (Hz)
+### Transmitters
+- `GW_TX <pin, baud = 5000>`- for transmission by wire (clean signal without modification)
+- `GW_TX_RF <pin, baud = 5000>`433 MHz radio modules and the like (a mechanism for “training” the communication channel is built in)
+- `GW_TX_IR <pin, baud = 5000, freq = 38000>`IR channel (38 kHz modulation with inversion)
+  - `pin`- pin MK
+  - `baud`- speed (bit/s, bod)
+  - `freq`- modulation frequency for IR (Hz)
 
-### gw_tx, gw_tx_ir
-`` `CPP
-// time has passed since the end of the last shipment, ms
-uint16_t LastSend ();
+#### GW_TX, GW_TX_IR
+```cpp
+// Time has passed since the last shipment, ms.
+uint16_t lastSend();
 
-// ======== Packet ==========
+// ======== PACKET ========
 
-// Send a car package (type gw_auto_type)
-Void Sendpacket (Consta TD & DATA);
+// Send a package of cars (type GW AUTO TYPE)
+void sendPacket(const Td& data);
 
-// Send a car package (type gw_auto_type)
-VOID SENDPACket (Consta* Data, Size_t Len);
+// Send a package of cars (type GW AUTO TYPE)
+void sendPacket(const void* data, size_t len);
 
-// Send a package with a type
-Void Sendpackett (TP Type, Consta TD & DATA);
+// type-bag
+void sendPacketT(Tp type, const Td& data);
 
-// Send a package with a type
-Void Sendpackett (TP Type, Consta* Data, Size_t Len);
+// type-bag
+void sendPacketT(Tp type, const void* data, size_t len);
 
-// ======== RAW =============
+// ======== RAW ========
 
-// Start sending raw data
-VOID Beginraft ();
+// start sending raw data
+void beginRaw();
 
-// Send raw data
-VOID SENDRAW (Consta T & Data);
+// send out raw data
+void sendRaw(const T& data);
 
-// Send raw data (you can call several times)
-VOID SENDRAW (const VOID* DATA, SIZE_T LEN);
+// send raw data (can be called several times)
+void sendRaw(const void* data, size_t len);
 
-// Get the sending of raw data
-VOID Endraw ();
+// finish up sending raw data
+void endRaw();
 
-// Send single raw data (no need to call Begin + End)
-VOID SENDRAWSINGLE (COST VOID* DATA, SIZE_T LEN);
-VOID SENDRAWSINGLE (COST T&DATA);
-`` `
+// send single raw data (no need to call start + end)
+void sendRawSingle(const void* data, size_t len);
+void sendRawSingle(const T& data);
+```
 
-### gw_tx_rf
-`` `CPP
-Gw_tx_rf (uint8_t Trainms = 30);
+#### GW_TX_RF
+```cpp
+GW_TX_RF(uint8_t trainMs = 30);
 
-// set the time to build synchronization in MS
-VOID Settrain (Uint16_T MS);
-`` `
+// set the synchronization time in MS
+void setTrain(uint16_t ms);
+```
 
-### receiver
-- `gw_rx <pin, baud = 5000, bufsize = 64>` - receiver for all transmission types
-- `pin` - PIN MK
-- `baud` - speed (bit/s, body)
-- `buffsize` - the size of the reception buffer (byte) - *should be larger than the largest potential data package *
+### Receiver
+- `GW_RX <pin, baud = 5000, bufsize = 64>`receiver for all types of transmission
+  - `pin`- pin MK
+  - `baud`- speed (bit/s, bod)
+  - `bufsize`Receiving buffer (byte) - *should be larger than the largest potential data packet *
 
-`` `CPP
-// Connect the packet handler F (Uint8_t Type, Void* Data, Size_t Len)
-VOID Onpacket (PacketCallback CB);
+```cpp
+// connect a packet handler of the form f(uint8 t type, void* data, size t len)
+void onPacket(PacketCallback cb);
 
-// ByDRAILLED Raw Data Processing Type F (Void* Data, Size_t Len)
-VOID online (RAWCALLBACK CB);
+// connect a raw data processor of the form f(void* data, size t len)
+void onRaw(RawCallback cb);
 
-// Call when changing the signal on the pin
-VOID PINCHANGE ();
+// call up
+void pinChange();
 
-// Call in Loop
-VOID Tick ();
+// loop
+void tick();
 
-// Get the quality of reception as a percentage
-uint8_t getrssi ();
-`` `
+// Get quality of reception as a percentage
+uint8_t getRSSI();
 
-### Sending
-Sending blocking, at high transmission speeds it is recommended to wrap the sending into the ban on interruptions to improve the quality of communication.
+// Read in (call in the handler)
+template <typename T>
+bool readTo(T& var);
 
-### raw data
-To send raw data, you need to call the method of starting sending, sending data, providing completion:
+// Read how (call in the handler)
+template <typename T>
+T readAs();
+```
 
-`` `CPP
-GW_TX <2> TX;
+### Sending.
+Sending blocking, at high transmission speeds, it is recommended to wrap the sending in the prohibition of interruptions to improve the quality of communication.
 
-Struct Data {
-int i;
-Float F;
+#### Raw data
+To send raw data, you need to call the sending method, send the data, cause completion:
+
+```cpp
+GW_TX<2> tx;
+
+struct Data {
+  int i;
+  float f;
 };
 
-uint32_t data_32 = 123456;// whole
-uint8_t data_arr [] = {1, 2, 3, 4, 5};// Massive
-Char CSTR [10] = "HELLO";// char Array
-String str = "Hello";// String
-Data Data {1234, 3.1415};// Structure
+uint32_t data_32 = 123456;             // whole
+uint8_t data_arr[] = {1, 2, 3, 4, 5};  // stratum
+char cstr[10] = "hello";               // char array
+String str = "hello";                  // String
+Data data{1234, 3.1415};               // structure
 
-// nointerrupts ();
-TX.BeginRAW ();
+// noInterrupts();
+tx.beginRaw();
 
-// Size manually
-// TX.SendRAW (& DATA_32, SIZEOF (DATA_32));
-// tx.sendraw (Data_arr, Sizeof (Data_arr));
-// tx.sendraw (CSTR, Strlen (CSTR));
-// tx.sendraw (str.c_str (), str.length ());
-// TX.SendRAW (& DATA, SIZEOF (DATA));
+// manually
+// tx.sendRaw(&data_32, sizeof(data_32));
+// tx.sendRaw(data_arr, sizeof(data_arr));
+// tx.sendRaw(cstr, strlen(cstr));
+// tx.sendRaw(str.c_str(), str.length());
+// tx.sendRaw(&data, sizeof(data));
 
-// Auto size
-// tx.sendraw (Data_32);
-// tx.sendraw (Data_arr);
-// tx.Sendraw (Data);
+// size
+// tx.sendRaw(data_32);
+// tx.sendRaw(data_arr);
+// tx.sendRaw(data);
 
-tx.ndraw ();
-// Interrupts ();
-`` `
+tx.endRaw();
+// interrupts();
+```
 
-If the data is sent in parts, then we call the beginning, then the desired number is sent and completion:
+If the data is sent in parts, then we call the beginning, then the necessary number of times sending and completing:
 
-`` `CPP
-TX.BeginRAW ();
-TX.SendRAW (...);
-TX.SendRAW (...);
-TX.SendRAW (...);
-tx.ndraw ();
-`` `
+```cpp
+tx.beginRaw();
+tx.sendRaw(...);
+tx.sendRaw(...);
+tx.sendRaw(...);
+tx.endRaw();
+```
 
-If the data is sent for one entry, then you can use `sendrawsingle ()` without calling the start and end of sending:
+If data is sent in one go, it can be used`sendRawSingle()`without calling the start and end of the shipment:
 
-`` `CPP
-TX.SendRAWSINGLE (...);
-`` `
+```cpp
+tx.sendRawSingle(...);
+```
 
-> The library does not control the size and integrity of the data - you can fully realize your communication protocol without overwoman
+> The library does not control the size and integrity of the data - you can implement your entire communication protocol without overhead
 
-#### Plastic bag
-The library also allows you to transmit data on the universal bag of communication - the `sendpackett` method - the type of data is indicated so that it is more convenient to parse the package on the receiving device.In this case, the library controls the integrity and size of the data and does not cause the processor if they are damaged.For example, a package of type `1` - 32 bits the whole, a package of the` 2` - byte array, `3` - a string of arbitrary length, and so on.
+#### Package
+The library also allows data to be transmitted over a universal packet communication protocol - method`sendPacketT`specifies the type of data transmitted so that it is more convenient to parse the packet on the receiving device. In this case, the library controls the integrity and size of the data and will not call the processor if it is corrupted. For example, a package`1`- 32 bits whole, package type`2`- byte array,`3`A string of arbitrary length, and so on.
 
-- Type of package - number from 0 to 30
+- Packet type - number from 0 to 30
 - Data size - up to 2047 bytes
 
-`` `CPP
-GW_TX <2> TX;
+```cpp
+GW_TX<2> tx;
 
-Struct Data {
-int i;
-Float F;
+struct Data {
+  int i;
+  float f;
 };
 
-uint32_t data_32 = 123456;// whole
-uint8_t data_arr [] = {1, 2, 3, 4, 5};// Massive
-Char CSTR [10] = "HELLO";// char Array
-String str = "Hello";// String
-Data Data {1234, 3.1415};// Structure
+uint32_t data_32 = 123456;             // whole
+uint8_t data_arr[] = {1, 2, 3, 4, 5};  // stratum
+char cstr[10] = "hello";               // char array
+String str = "hello";                  // String
+Data data{1234, 3.1415};               // structure
 
-// nointerrupts ();
+// noInterrupts();
 
-// Size manually
-// tx.Sendpackett (0, & Data_32, Sizeof (Data_32));
-// tx.Sendpackett (1, Data_arr, Sizeof (Data_arr));
-// tx.Sendpackett (2, CSTR, StREN (CSTR));
-// tx.sendpackett (3, str.c_str (), str.length ());
-// TX.Sendpackett (4, & Data, Sizeof (Data));
+// manually
+// tx.sendPacketT(0, &data_32, sizeof(data_32));
+// tx.sendPacketT(1, data_arr, sizeof(data_arr));
+// tx.sendPacketT(2, cstr, strlen(cstr));
+// tx.sendPacketT(3, str.c_str(), str.length());
+// tx.sendPacketT(4, &data, sizeof(data));
 
-// Auto size
-// tx.sendpackett (0, Data_32);
-// tx.Sendpackett (1, Data_arr);
-// tx.Sendpackett (4, Data);
+// size
+// tx.sendPacketT(0, data_32);
+// tx.sendPacketT(1, data_arr);
+// tx.sendPacketT(4, data);
 
-// Interrupts ();
-`` `
+// interrupts();
+```
 
-The type for convenience can be `enum`:
+The type for convenience may be`enum`:
 
-`` `CPP
+```cpp
 enum class packet_t {
-Data32,
-Array,
-CSTring,
-String,
-Struct,
+  Data32,
+  Array,
+  Cstring,
+  String,
+  Struct,
 };
 
-// tx.Sendpackett (Packet_t :: Data32, Data_32);
-// tx.Sendpackett (Packet_t :: Array, Data_arr);
-// tx.Sendpackett (Packet_t :: Cstring, Cstr, Strlen (CSTR));
-// tx.Sendpackett (packet_t :: string, str.c_str (), str.length ());
-// tx.Sendpackett (Packet_t :: Struct, Data);
-`` `
+// tx.sendPacketT(packet_t::Data32, data_32);
+// tx.sendPacketT(packet_t::Array, data_arr);
+// tx.sendPacketT(packet_t::Cstring, cstr, strlen(cstr));
+// tx.sendPacketT(packet_t::String, str.c_str(), str.length());
+// tx.sendPacketT(packet_t::Struct, data);
+```
 
-If you do not specify the type of package (the `sendpacket` method), then it will be equal to the type` 31` during parsing (constant `gw_auto_type`).It is convenient if the system contains only one type of package:
+If you do not specify the package type (method)`sendPacket`), it will be equal to the type`31`parsing`GW_AUTO_TYPE`). It is convenient if there is only one type of package in the system:
 
-`` `CPP
-// Size manually
-// TX.Sendpacket (& Data_32, Sizeof (Data_32));
-// tx.sendpacket (Data_arr, Sizeof (Data_arr));
-// tx.Sendpacket (CSTR, Strlen (CSTR));
-// tx.sendpacket (str.c_str (), str.length ());
-// TX.Sendpacket (& Data, Sizeof (Data));
+```cpp
+// manually
+// tx.sendPacket(&data_32, sizeof(data_32));
+// tx.sendPacket(data_arr, sizeof(data_arr));
+// tx.sendPacket(cstr, strlen(cstr));
+// tx.sendPacket(str.c_str(), str.length());
+// tx.sendPacket(&data, sizeof(data));
 
-// Auto size
-// tx.Sendpacket (Data_32);
-// tx.Sendpacket (Data_arr);
-// tx.Sendpacket (Data);
-`` `
+// size
+// tx.sendPacket(data_32);
+// tx.sendPacket(data_arr);
+// tx.sendPacket(data);
+```
 
-### Reception
-- asynchronous reception - you need to call the `pinchange ()` method at the moment the signal changes on the pin: in the interruption by `chenge` or manually
-- To obtain data, you need to connect the function-shapeOtchik
-- In the main cycle of the program, you need to call a ticker `tick ()` - a package will be processed in it and a connected processor will be called
+### Reception.
+- Asynchronous reception - you need to call the method`pinChange()`at the time of change of the signal on the pin: in interruption`CHANGE`manually
+- To obtain data, you need to connect the processing function
+- In the main cycle of the program you need to call the ticker`tick()`It will process the packet and call the connected processor.
 
-`` `CPP
-// Example for Arduino Nano
+```cpp
+// An example for Arduino Nano
 
-Gw_rx <2> rx;// PIN 2, interruption 0
+GW_RX<2> rx;  // pin 2, interruption 0
 
-VOID setup () {
-// !!!CHANGE interruption survey
-Attachinterrupt (0, [] () {rx.pinchange ();}, chean);
+void setup() {
+  // !!! poll in interruption of CHANGE
+  attachInterrupt(0, []() { rx.pinChange(); }, CHANGE);
 
-// raw data handler
-rx.onraw ([] (void* data, size_t len) {
-// ...
+  // raw-dataman
+  rx.onRaw([](void* data, size_t len) {
+    // ...
+  });
+
+  // packet-handler
+  rx.onPacket([](uint8_t type, void* data, size_t len) {
+    // ...
+  });
+}
+
+void loop() {
+  rx.tick();
+
+  // !!! or a manual interview without interruption
+  // static bool prev;
+  // if (prev != gio::read(2)) {
+  //   prev ^= 1;
+  //   rx.pinChange();
+  // }
+}
+```
+
+#### Packet parsing
+If everything is clear with raw data, then the package, when received, needs to verify the type and convert the data into the desired format. An example of the data sent above:
+
+```cpp
+rx.onPacket([](uint8_t type, void* data, size_t len) {
+    Serial.print("received type ");
+    Serial.print(type);
+    Serial.print(": ");
+
+    switch (packet_t(type)) {
+        case packet_t::Data32: {
+            // You can additionally check the length of the data, for example here if (len = 4).
+            Serial.print(*((uint32_t*)data));
+        } break;
+
+        case packet_t::Array: {
+            uint8_t* arr = (uint8_t*)data;
+            for (size_t i = 0; i < len; i++) {
+                Serial.print(arr[i]);
+                Serial.print(',');
+            }
+        } break;
+
+        case packet_t::Cstring: {
+            Serial.write((uint8_t*)data, len);
+        } break;
+
+        case packet_t::String: {
+            Serial.write((uint8_t*)data, len);
+        } break;
+
+        case packet_t::Struct: {
+            Data& p = *((Data*)data);
+            Serial.print(p.i);
+            Serial.print(',');
+            Serial.print(p.f);
+        } break;
+    }
+    Serial.println();
 });
+```
 
-// packet handler
-rx.onpacket ([] (Uint8_t Type, VOID* DATA, SIZE_T LEN) {
-// ...
-});
-}
+### Communication types
+#### Radio 433 MHz
+Data can be transmitted using the simplest radio modules, in which the transmitter signal is simply duplicated at the receiver output (for example, FS1000A and MX-RM-5V at 433 MHz). For this purpose, a class is used.`GW_TX_RF`When sending data, it adds a "pumping" of the communication channel to synchronize the transmitter and receiver, the builder can transfer the duration of the swing in milliseconds. Upgrades will occur before each data is sent if they are sent less than 50 ms (obtained experimentally). That is, if you send data more often - there will be no swing and it will take less time to transfer.
 
-VOID loop () {
-rx.tick ();
+```cpp
+GW_TX_RF<3, 1000> tx(20);   // swing 20 ms, speed 1000
+```
 
-// !!!or manually survey without interruption
-// Static Bool Prev;
-// If! = Gio :: Read (2)) {
-// Prev ^= 1;
-// rx.pinchange ();
-//}
-}
-`` `
+The worse the potential quality of communication and the worse the quality of the modules themselves, the longer it takes to pump. Good modules (e.g. green FS1000A and MX-RM-5V) sway in 10 ms, bad modules (e.g. SYNxxx) in 100 ms.
 
-#### Parsing packages
-If everything is clear with raw data, then at the package you need to verify the type and convert the data into the desired format.An example with the data that sent above:
+For more stable and high-quality communication, it is recommended to reduce the speed to 1000 and below.
 
-`` `CPP
-rx.onpacket ([] (Uint8_t Type, VOID* DATA, SIZE_T LEN) {
-Serial.print ("Receved Type");
-Serial.print (type);
-Serial.print (":");
+> Maximum stable speed for a pair of green modules (FS1000A and MX-RM-5V): 15,000 baud
 
-Switch (Packet_t (Type)) {
-Case Packet_t :: Data32: {
-// you can additionally check the data length, for example, here if (Len == 4)
-Serial.print (*((uint32_t*) data));
-} Break;
+#### ICU
+The library can modulate the 38 kHz signal for the IR LED so that it is received by the IR receiver - for example, a standard Arduin set of remote, receiver and LED, the LED is connected without inversion (GND-GND, an anode to pin MK through a resistor or transistor for amplification). To send you need to use a class`GW_TX_IR`.
 
-Case Packet_t :: Array: {
-uint8_t* arr = (uint8_t*) Data;
-for (size_t i = 0; i <len; i ++) {
-Serial.print (arr [i]);
-Serial.print (',');
-}
-} Break;
-
-Case Packet_t :: Cstring: {
-Serial.write ((uint8_t*) Data, Len);
-} Break;
-
-Case Packet_t :: String: {
-Serial.write ((uint8_t*) Data, Len);
-} Break;
-
-Case Packet_t :: Struct: {
-Data & P = *((Data *) Data);
-Serial.print (P.I);
-Serial.print (',');
-Serial.print (P.F);
-} Break;
-}
-Serial.println ();
-});
-`` `
-
-### Types of communication
-### Radio 433 MHz
-Data can be transmitted using the simplest radio modules, in which the transmitter signal simply duplicates at the receiving receiver (for example, FS1000A and MX-RM-5V at 433 MHz).To do this, the `gw_tx_rf` class is used, it adds when sending data to the“ swing ”of the communication channel for synchronizing the transmitter and receiver, the duration of the buildup in milliseconds can be transferred to the designer.Rolling will occur before each data sending if they are sent less often than 50 ms (received experimentally).That is, if you send data more often, there will be no swing and less time will go to the program.
-
-`` `CPP
-Gw_tx_rf <3> tx (20);// rocking 20 ms
-`` `
-
-The worse the potential quality of communication and the worse the quality of the modules themselves, the longer the swing is needed.Good modules (for example, green FS1000A and MX-RM-5V) swing for 10 ms, bad (for example Synxxx)-for 100 ms.
-
-The maximum stable speed for a pair of green modules (FS1000A and MX-RM-5V)-in the area of ​​15'000 BOD, the module itself cannot quickly.
-
-#### ik
-The library can modulate a 38 kHz signal for an infected IR-LED so that it is accepted by an IR receiver-for example, a standard arduinsky set from a remote control, receiver and LED, the LED is connected without an inversion (GND-GND, anode on a PIN MK through a resistor or transistor for amplification).To send, you need to use the class `gw_tx_ir`.
+> Maximum stable speed: 1'500 baud
 
 ### Quality of communication
-### Filtering
-By default, the library uses the noise filter for the `gw_rx` receiver class - it filters random peaks when the signal changes the condition for a short time, this is found when transmitting on the radio or with poor circuitry and transmission by wires (the presence of a number of coils, ITD engines).For insignificant relief of the library, the filter can be turned off with define:
+#### Filtration
+By default, the library uses a noise filter for the receiver class.`GW_RX`- it filters random peaks, when the signal changes state for a short time, this occurs when transmitting by radio or with poor circuitry and transmission by wires (the presence of coils, motors, etc.). For insignificant library relief, the filter can be defiled:
 
-`` `CPP
-#define gw_no_filter
-#include <gw_rx.h>
-`` `
+```cpp
+#define GW_NO_FILTER
+#include <GW_RX.h>
+```
 
-### Hamming
-Hamming Coding is turned on for the entire communication (RAW and Pack) on the transmitter and receiver - this is light and quick coding (8.4), allows you to restore the data damaged during transmission (up to 12% of the damage).The size of the transmitted data is doubled.DefAinu, requires an external library [Hamming] (https://github.com/gyverlibs/hamming):
+#### Hamming
+Hamming encoding is enabled for the entire communication (raw and packet) on the transmitter and receiver - this is easy and fast encoding (8.4), allows you to restore damaged data during transmission (up to 12% of damages). The size of the transmitted data is doubled. Enabled by defile, requires an external library[Hamming](https://github.com/GyverLibs/Hamming):
 
-`` `CPP
-// Select one of two options:
-#define gw_use_Hamming // ordinary (8.4)
-// #define gw_use_hamming_mix // with mixing (more memory consumption, but more reliable)
+```cpp
+// Choose one of two options:
+#define GW_USE_HAMMING          // regular (8.4)
+// #define GW USE HAMMING MIX // with stirring (more memory consumption, but more reliable)
 
-#include <gw_rx.h>
-#include <gw_tx.h>
-`` `
+#include <GW_RX.h>
+#include <GW_TX.h>
+```
+
+> Note: in mode`GW_USE_HAMMING_MIX`cannot be used for sending through`sendRaw`Several times in a row (within one start-end). There must be only one shipment, or`sendRawSingle`
 
 ## Examples
-### Line
-We send a package without type, we bring to the port the entire length:
+### Line.
+Send a package without a type, output to the port the entire accepted length:
 
-`` `CPP
-// Sending
-#include <arduino.h>
-#include <gw_tx.h>
+```cpp
+// shipment
+#include <Arduino.h>
+#include <GW_TX.h>
 
-VOID setup () {
+void setup() {
 }
 
-VOID loop () {
-Gw_tx <3> tx;
+void loop() {
+    GW_TX<3> tx;
 
-String S;
-S += "Hello!";
-static uint8_t i;
-S += ++ I;
+    String s;
+    s += "hello! ";
+    static uint8_t i;
+    s += ++i;
 
-nointerrupts ();
-tx.sendpacket (S.C_STR (), S.LENGTH ());
-interrupts ();
+    noInterrupts();
+    tx.sendPacket(s.c_str(), s.length());
+    interrupts();
 
-DELAY (1000);
+    delay(1000);
 }
-`` `
-`` `CPP
-// Reception
-#include <arduino.h>
-#include <gw_rx.h>
+```
+```cpp
+// reception
+#include <Arduino.h>
+#include <GW_RX.h>
 
-Gw_rx <2> rx;
+GW_RX<2> rx;
 
-VOID setup () {
-Serial.Begin (115200);
-Attachinterrupt (0, [] () {rx.pinchange ();}, chean);
+void setup() {
+    Serial.begin(115200);
+    attachInterrupt(0, []() { rx.pinChange(); }, CHANGE);
 
-rx.onpacket ([] (Uint8_t Type, VOID* DATA, SIZE_T LEN) {
-Serial.write ((uint8_t*) Data, Len);
-Serial.println ();
-});
+    rx.onPacket([](uint8_t type, void* data, size_t len) {
+        Serial.write((uint8_t*)data, len);
+        Serial.println();
+    });
 }
 
-VOID loop () {
-rx.tick ();
+void loop() {
+    rx.tick();
 }
-`` `
+```
 
-### structure
-`` `CPP
-// Sending
-#include <arduino.h>
-#include <gw_tx.h>
+### Structure
+```cpp
+// shipment
+#include <Arduino.h>
+#include <GW_TX.h>
 
-Struct Data {
-int i;
-Float F;
+struct Data {
+    int i;
+    float f;
 };
 
-VOID setup () {
+void setup() {
 }
 
-VOID loop () {
-Gw_tx <3> tx;
+void loop() {
+    GW_TX<3> tx;
 
-static int i;
-Data Data {I ++, 3.14};
+    static int i;
+    Data data{i++, 3.14};
 
-nointerrupts ();
-tx.Sendpacket (Data);
-interrupts ();
+    noInterrupts();
+    tx.sendPacket(data);
+    interrupts();
 
-DELAY (1000);
+    delay(1000);
 }
-`` `
-`` `CPP
-// Reception
-#include <arduino.h>
-#include <gw_rx.h>
+```
+```cpp
+// reception
+#include <Arduino.h>
+#include <GW_RX.h>
 
-Struct Data {
-int i;
-Float F;
+struct Data {
+    int i;
+    float f;
 };
 
-Gw_rx <2> rx;
+GW_RX<2> rx;
 
-VOID setup () {
-Serial.Begin (115200);
-Attachinterrupt (0, [] () {rx.pinchange ();}, chean);
+void setup() {
+    Serial.begin(115200);
+    attachInterrupt(0, []() { rx.pinChange(); }, CHANGE);
 
-rx.onpacket ([] (Uint8_t Type, VOID* DATA, SIZE_T LEN) {
-if (sizeof (Data)! = Len) return;// Checking the correctness of the length
+    rx.onPacket([](uint8_t type, void* data, size_t len) {
+        if (sizeof(Data) != len) return;  // length-test
+        
+        Data& d = *((Data*)data);
+        Serial.print(d.i);
+        Serial.print(',');
+        Serial.println(d.f);
 
-Data & D = *((Data *) Data);
-Serial.print (D.I);
-Serial.print (',');
-Serial.println (D.F);
-
-// or
-// serial.println (static_cast <data*> (data)-> f);
-});
+        // or
+        // Serial.println(static_cast<Data*>(data)->f);
+    });
 }
 
-VOID loop () {
-rx.tick ();
+void loop() {
+    rx.tick();
 }
-`` `
+```
 
-<a ID = "Versions"> </a>
+<a id="versions"></a>
 
-## versions
-- V1.0
+## Versions
+- v1.0
 
-<a id = "Install"> </a>
+<a id="install"></a>
 ## Installation
-- The library can be found by the name ** gyverwire ** and installed through the library manager in:
-- Arduino ide
-- Arduino ide v2
-- Platformio
-- [download the library] (https://github.com/gyverlibs/gyverwire/archive/refs/heads/main.zip). Zip archive for manual installation:
-- unpack and put in * C: \ Program Files (X86) \ Arduino \ Libraries * (Windows X64)
-- unpack and put in * C: \ Program Files \ Arduino \ Libraries * (Windows X32)
-- unpack and put in *documents/arduino/libraries/ *
-- (Arduino id) Automatic installation from. Zip: * sketch/connect the library/add .Zip library ... * and specify downloaded archive
-- Read more detailed instructions for installing libraries[here] (https://alexgyver.ru/arduino-first/#%D0%A3%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0_%D0%B1%D0%B8%D0%B1%D0%B8%D0%BE%D1%82%D0%B5%D0%BA)
+- The library can be found under the name **GyverWire** and installed through the library manager in:
+    - Arduino IDE
+    - Arduino IDE v2
+    - PlatformIO
+- [Download the library](https://github.com/GyverLibs/GyverWire/archive/refs/heads/main.zip).zip archive for manual installation:
+    - Unpack and put in *C:\Program Files (x86)\Arduino\libraries* (Windows x64)
+    - Unpack and put in *C:\Program Files\Arduino\libraries* (Windows x32)
+    - Unpack and put in *Documents/Arduino/libraries/ *
+    - (Arduino IDE) Automatic installation from .zip: *Sketch/Connect library/Add .ZIP library...* and specify downloaded archive
+- Read more detailed instructions for installing libraries[here](https://alexgyver.ru/arduino-first/#%D0%A3%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0_%D0%B1%D0%B8%D0%B1%D0%BB%D0%B8%D0%BE%D1%82%D0%B5%D0%BA)
 ### Update
-- I recommend always updating the library: errors and bugs are corrected in the new versions, as well as optimization and new features are added
-- through the IDE library manager: find the library how to install and click "update"
-- Manually: ** remove the folder with the old version **, and then put a new one in its place.“Replacement” cannot be done: sometimes in new versions, files that remain when replacing are deleted and can lead to errors!
+- I recommend always updating the library: new versions fix errors and bugs, as well as optimize and add new features.
+- Through the library manager IDE: find the library as when installing and click "Update"
+- Manually: **Delete the folder with the old version** and then put the new one in its place. “Replacement” can not be done: sometimes new versions delete files that will remain when replaced and can lead to errors!
 
-<a id = "Feedback"> </a>
+<a id="feedback"></a>
 
-## bugs and feedback
-Create ** Issue ** when you find the bugs, and better immediately write to the mail [alex@alexgyver.ru] (mailto: alex@alexgyver.ru)
-The library is open for refinement and your ** pull Request ** 'ow!
+## Bugs and feedback
+If you find bugs, create **Issue**, or better write to the mail immediately.[alex@alexgyver.ru](mailto:alex@alexgyver.ru)  
+The library is open for revision and your **Pull Requests*!
 
-When reporting about bugs or incorrect work of the library, it is necessary to indicate:
-- The version of the library
-- What is MK used
+When reporting bugs or incorrect work of the library, it is necessary to specify:
+- Library version
+- What is used by the IC
 - SDK version (for ESP)
-- version of Arduino ide
-- whether the built -in examples work correctly, in which the functions and designs are used, leading to a bug in your code
-- what code has been loaded, what work was expected from it and how it works in reality
-- Ideally, attach the minimum code in which the bug is observed.Not a thousand out of a thousandCranberries, and minimum code
+- Arduino IDE version
+- Are embedded examples that use features and designs that cause bugs in your code working correctly?
+- What code was downloaded, what work was expected from it and how it works in reality
+- Ideally, attach the minimum code in which the bug is observed. Not a canvas of a thousand lines, but a minimum code.
