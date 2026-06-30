@@ -44,8 +44,8 @@ The library contains 3 classes of transmitters and 1 general class of receiver:
 - `GW_TX_RF <pin, baud = 5000>`433 MHz radio modules and the like (a mechanism for “training” the communication channel is built in)
 - `GW_TX_IR <pin, baud = 5000, freq = 38000>`IR channel (38 kHz modulation with inversion)
   - `pin`- pin MK
-  - `baud`- speed (bit/s, bod)
-  - `freq`- modulation frequency for IR (Hz)
+  - `baud` - speed from 23 to 500000 bit/s (baud)
+  - `freq` - IR modulation frequency from 8 to 500000 Hz
 
 #### GW_TX, GW_TX_IR
 ```cpp
@@ -90,13 +90,13 @@ void sendRawSingle(const T& data);
 GW_TX_RF(uint8_t trainMs = 30);
 
 // set the synchronization time in MS
-void setTrain(uint16_t ms);
+void setTrain(uint8_t ms);
 ```
 
 ### Receiver
 - `GW_RX <pin, baud = 5000, bufsize = 64>`receiver for all types of transmission
   - `pin`- pin MK
-  - `baud`- speed (bit/s, bod)
+  - `baud` - speed from 23 to 500000 bit/s (baud)
   - `bufsize`Receiving buffer (byte) - *should be larger than the largest potential data packet *
 
 ```cpp

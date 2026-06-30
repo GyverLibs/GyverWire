@@ -17,6 +17,8 @@
 // GW_TX
 template <uint8_t pin, int32_t baud = 5000>
 class GW_TX {
+    static_assert(baud >= 23 && baud <= 500000, "baud must be in range 23..500000");
+
    protected:
     static constexpr size_t GW_FRAME = _GW_FRAME(baud);
 
@@ -42,13 +44,13 @@ class GW_TX {
     // отправить пакет с типом
     template <typename Tp, typename Td>
     void sendPacketT(Tp type, const Td& data) {
-        _sendPacket(uint8_t(type), &data, sizeof(Td));
+        _sendPacket(int32_t(type), &data, sizeof(Td));
     }
 
     // отправить пакет с типом
     template <typename Tp>
     void sendPacketT(Tp type, const void* data, size_t len) {
-        _sendPacket(uint8_t(type), data, len);
+        _sendPacket(int32_t(type), data, len);
     }
 
     // ======== RAW ========
@@ -79,6 +81,8 @@ class GW_TX {
 
     // отправить сырые данные
     void sendRaw(const void* data, size_t len) {
+        if (!len) return;
+
 #if defined(GW_USE_HAMMING)
         const uint8_t* p = (const uint8_t*)data;
         if (_first) _startFrame(Hamming3::encode(*p & 0xf));
@@ -130,7 +134,7 @@ class GW_TX {
    protected:
     uint16_t _lastSend = 0;
 
-    void _sendPacket(uint8_t type, const void* data, size_t len) {
+    void _sendPacket(int32_t type, const void* data, size_t len) {
         // uint8_t crc = gwutil::crc8(data, len);
         // crc = gwutil::crc8(&type, 1, crc);
 
@@ -140,7 +144,7 @@ class GW_TX {
         // sendByte(crc);
         // endRaw();
 
-        if (len > GW_MAX_LEN || type > GW_MAX_TYPE) return;
+        if (len > GW_MAX_LEN || type < 0 || type > GW_MAX_TYPE) return;
 
         uint8_t lentype[2];
         lentype[0] = (len << _GW_TYPE_SIZE) >> 8;
@@ -247,6 +251,8 @@ class GW_TX_RF : public GW_TX<pin, baud> {
 // GW_TX_IR
 template <uint8_t pin, int32_t baud = 5000, uint32_t freq = 38000>
 class GW_TX_IR : public GW_TX<pin, baud> {
+    static_assert(freq >= 8 && freq <= 500000, "freq must be in range 8..500000");
+
    private:
     static constexpr uint16_t GW_DEL38 = 1000000ul / freq / 2;
 

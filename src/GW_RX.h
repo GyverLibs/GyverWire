@@ -11,6 +11,8 @@
 
 template <uint8_t pin, int32_t baud = 5000, size_t bufsize = 64>
 class GW_RX {
+    static_assert(baud >= 23 && baud <= 500000, "baud must be in range 23..500000");
+
     typedef void (*PacketCallback)(uint8_t type, void* data, size_t len);
     typedef void (*RawCallback)(void* data, size_t len);
 
@@ -27,7 +29,7 @@ class GW_RX {
     };
 
     // FrontFilter
-    template <uint8_t noise>
+    template <uint16_t noise>
     class FrontFilter {
        public:
         int32_t getPulse(uint16_t t) {
@@ -79,7 +81,7 @@ class GW_RX {
     // прочитать как (вызывать в обработчике)
     template <typename T>
     T readAs() {
-        T var;
+        T var{};
         readTo(var);
         return var;
     }
@@ -162,7 +164,7 @@ class GW_RX {
             // }
             if (_pack_cb) {
                 _rssi <<= 1;
-                if (_len > 3 && !gwutil::crc8(_buf, _len)) {
+                if (_len >= 3 && !gwutil::crc8(_buf, _len)) {
                     uint16_t len = ((_buf[_len - 3] << 8) | _buf[_len - 2]) >> _GW_TYPE_SIZE;
                     if (len == _len - 3) {
                         _rssi |= 1;
@@ -193,7 +195,7 @@ class GW_RX {
     uint16_t _len = 0;
     uint16_t _rssi = 0xffff;
     uint8_t _bit = 0;
-    State _state = State::Idle;
+    volatile State _state = State::Idle;
     bool _edge;
     bool _pinv;
 
