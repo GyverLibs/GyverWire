@@ -91,6 +91,7 @@ class GW_TX {
             _sendByte(Hamming3::encode(*p & 0xf));
             _sendByte(Hamming3::encode(*p >> 4));
             ++p;
+            yield();
         }
 
 #elif defined(GW_USE_HAMMING_MIX)
@@ -103,12 +104,18 @@ class GW_TX {
 
         uint8_t* p = buf;
         _startFrame(*p);
-        while (elen--) _sendByte(*p++);
+        while (elen--) {
+            _sendByte(*p++);
+            yield();
+        }
         delete[] buf;
 #else
         const uint8_t* p = (const uint8_t*)data;
         _startFrame(*p);
-        while (len--) _sendByte(*p++);
+        while (len--) {
+            _sendByte(*p++);
+            yield();
+        }
 #endif
     }
 
@@ -167,7 +174,10 @@ class GW_TX {
         p = buf;
         beginRaw();
         _startFrame(*p);
-        while (elen--) _sendByte(*p++);
+        while (elen--) {
+            _sendByte(*p++);
+            yield();
+        }
         endRaw();
         delete[] buf;
 #else
