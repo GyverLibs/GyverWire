@@ -1,7 +1,8 @@
 #pragma once
-#include <./utils.h>
 #include <Arduino.h>
 #include <GyverIO.h>
+
+#include "./utils.h"
 
 // #ifdef GW_USE_HAMMING
 #include <Hamming.h>

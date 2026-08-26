@@ -1,8 +1,9 @@
 #pragma once
-#include <./utils.h>
 #include <Arduino.h>
 #include <GyverIO.h>
 #include <Hamming.h>
+
+#include "./utils.h"
 
 #define _GW_TOLERANCE 2
 #define _GW_FILT_DIV 5
